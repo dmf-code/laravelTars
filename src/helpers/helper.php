@@ -1,6 +1,6 @@
 <?php
 
-use App\Tars\impl\TarsHelper;
+use App\Tars\utils\TarsHelper;
 
 if (!function_exists("getUniqueId")) {
     function getUniqueId()
@@ -42,7 +42,7 @@ if (!function_exists("tarsRequest")) {
     {
         $tarsRes = TarsHelper::getHttpIpAndPort($id);
 
-        Log::info(json_encode($tarsRes, JSON_UNESCAPED_UNICODE));
+        \Log::info(json_encode($tarsRes, JSON_UNESCAPED_UNICODE));
 
         if ($tarsRes['code'] != 200) {
             return helpResponse(400, $tarsRes['msg']);
@@ -58,10 +58,12 @@ if (!function_exists("tarsRequest")) {
         $res = json_decode($res->getBody()->getContents(), true);
 
         if ($id != 'Integral.Integral.IntegralHttp' && $res['code'] != 200) {
+            \Log::error(json_encode($res, JSON_UNESCAPED_UNICODE));
             return helpResponse(400, '查询失败');
         }
 
         if ($id == 'Integral.Integral.IntegralHttp' && $res['msg'] != 'success') {
+            \Log::error(json_encode($res, JSON_UNESCAPED_UNICODE));
             return helpResponse(400, '查询失败');
         }
 
