@@ -3,6 +3,7 @@
 
 namespace App\Tars\utils;
 
+use Illuminate\Support\Facades\Log;
 use Tars\registry\QueryFWrapper;
 use Tars\Utils;
 
@@ -26,7 +27,7 @@ class TarsHelper
     {
         if (!self::$tarsConfig) {
             $cfg = config('tars.deploy_cfg');
-           self::$tarsConfig = Utils::parseFile($cfg);
+            self::$tarsConfig = Utils::parseFile($cfg);
         }
         return self::$tarsConfig;
     }
@@ -41,26 +42,48 @@ class TarsHelper
     }
 
     /**
-     * 返回servant对象
-     * @param string $servantClassName
-     * @param array $args
-     * @return mixed
+     * 获取主控配置对象
+     * @param $moduleName
+     * @param int $socketMode
+     * @param string $charset
+     * @return \Tars\client\CommunicatorConfig
      */
-    public static function servantFactory(string $servantClassName){
-            $vars = get_class_vars($servantClassName);
-            $endpoint = $vars['_servantName'];
-            list($appName,$serviceName,$objName)=explode('.',$endpoint,3);
-
+    public static function getCommunicatorConfig($moduleName, $socketMode=2, $charset='UTF-8')
+    {
+        try {
             $config = new \Tars\client\CommunicatorConfig();
 
             $locator = static::getTarsLocator();
 
             $config->setLocator($locator);
-            $config->setModuleName("$appName.$serviceName");
-            $config->setCharsetName('UTF-8');
-            $config->setSocketMode(2); //1标识socket 2标识swoole同步 3标识swoole协程
+            $config->setModuleName($moduleName);
+            $config->setCharsetName($charset);
+            $config->setSocketMode($socketMode); //1标识socket 2标识swoole同步 3标识swoole协程
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return null;
+        }
+        return $config;
+    }
 
-            return new $servantClassName($config);
+    /**
+     * 返回servant对象
+     * @param string $servantClassName
+     * @return mixed
+     * @throws \Exception
+     */
+    public static function servantFactory(string $servantClassName) {
+        $vars = get_class_vars($servantClassName);
+        $endpoint = $vars['_servantName'];
+        list($appName,$serviceName,$objName)=explode('.',$endpoint,3);
+
+        $config = static::getCommunicatorConfig("$appName.$serviceName");
+
+        if (is_null($config)) {
+            throw new \Exception('获取主控配置对象失败');
+        }
+
+        return new $servantClassName($config);
     }
 
     /**
@@ -92,5 +115,36 @@ class TarsHelper
             'port' => $port
         ]);
 
+    }
+
+    /**
+     * 获取配置
+     * @param $fileName
+     * @param string $dstPath
+     * @param string $appName
+     * @param string $serverName
+     * @return bool
+     * @throws \Exception
+     */
+    public static function getConfig($fileName, $dstPath='', $appName='Activity', $serverName='groupBuy')
+    {
+        try {
+            $moduleName = "{$appName}.{$serverName}";
+            $config = static::getCommunicatorConfig($moduleName);
+
+            if (is_null($config)) {
+                throw new \Exception('获取主控配置对象失败');
+            }
+
+            $conigServant = new \Tars\config\ConfigServant($config);
+            $result = $conigServant->loadConfig($appName, $serverName, $fileName, $configtext); //参数分别为 appName(servant name 第一部分)，server name(servant name第二部分)，文件名，最后一个是引用传参，是输出的配置文件内容。
+
+            $filePath = app()->basePath() . DIRECTORY_SEPARATOR . $dstPath . DIRECTORY_SEPARATOR . $fileName;
+            file_put_contents($filePath, $configtext);
+        } catch (\Exception $e) {
+            \Log::error($e->getMessage());
+            return false;
+        }
+        return true;
     }
 }
