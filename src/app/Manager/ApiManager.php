@@ -4,7 +4,7 @@
 namespace App\Services;
 
 
-class ApiService
+class ApiManager
 {
 
 }

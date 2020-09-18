@@ -5,9 +5,13 @@ namespace App\Services;
 
 
 use App\Exports\UniversalExport;
+use App\Imports\UniversalImport;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Bus\PendingDispatch;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Events\BeforeSheet;
 use Maatwebsite\Excel\Facades\Excel;
+use Maatwebsite\Excel\Reader;
 
 class ExcelService
 {
@@ -48,5 +52,21 @@ class ExcelService
 
         });
         return Excel::download($export, $name);
+    }
+
+    /**
+     * 导入
+     * @param string $name
+     * @param Model $model
+     * @param array $fillKeys ['id', 'name', 'created_at', 'updated_at', 'deleted_at']
+     * @param array $rules [ ['func' => 'checkNotEmpty', 'args' => ['max_len' => 1, 2]] ]
+     * @return \Maatwebsite\Excel\Excel|PendingDispatch|Reader
+     */
+    public function import(string $name, Model $model, array $fillKeys, array $rules=[])
+    {
+        $universalImport = new UniversalImport($model, $fillKeys, $rules);
+        $universalImport->setFileName($name);
+
+        return Excel::import($universalImport, $universalImport->getFilename());
     }
 }
