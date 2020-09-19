@@ -13,7 +13,7 @@ abstract class BaseDao
     protected $params;
     public function __construct(Model $model)
     {
-        $this->model = $model::query();;
+        $this->model = $model::query();
         $this->params = [];
     }
 

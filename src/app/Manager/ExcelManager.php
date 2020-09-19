@@ -13,7 +13,7 @@ use Maatwebsite\Excel\Events\BeforeSheet;
 use Maatwebsite\Excel\Facades\Excel;
 use Maatwebsite\Excel\Reader;
 
-class ExcelService
+class ExcelManager
 {
     private function setWidth()
     {
