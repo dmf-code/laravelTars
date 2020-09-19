@@ -1,7 +1,7 @@
 <?php
 
 
-namespace App\Services;
+namespace App\Manager;
 
 
 use Illuminate\Http\Request;
