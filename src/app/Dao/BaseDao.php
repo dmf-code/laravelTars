@@ -144,4 +144,6 @@ abstract class BaseDao
     abstract public function update($id);
 
     abstract public function delete($id);
+
+    abstract public function show($id);
 }
