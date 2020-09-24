@@ -49,9 +49,44 @@ class UniversalImport implements ToCollection, WithHeadingRow
         return true;
     }
 
+    /**
+     * @param $col
+     * @param $args ['max_len' =>  12]
+     * @return bool|string
+     */
     public function checkMoreThan($col, $args)
     {
-        if (mb_strlen($col) > $args['max_len']) {}
+        if (mb_strlen($col) > $args['max_len']) {
+            return "该字段不能超过 {$args['max_len']} 个字";
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $col
+     * @param $args ['label' => 'key 标签', 'key' => ['1' => 1]]
+     * @return bool|string
+     */
+    public function checkKeyExists($col, $args)
+    {
+        if (!array_key_exists($col, $args['key'])) {
+            return "{$args['label']} 不存在";
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $col
+     * @param $args ['label' => '导入的head名称']
+     * @return string
+     */
+    public function checkNumber($col, $args)
+    {
+        if (!is_numeric($col)) {
+            return "{$args['label']} 不是数字";
+        }
     }
 
     /**
@@ -81,15 +116,27 @@ class UniversalImport implements ToCollection, WithHeadingRow
             return true;
         }
         foreach ($this->rules as $k => $v) {
-            switch ($v['func']) {
-                case 'checkNotEmpty':
-                    $error = $this->checkNotEmpty($cols[$k]);
-                    break;
-                case 'checkMobile':
-                    $error = $this->checkMobile($cols[$k]);
-                    break;
-                default:
-                    $error = true;
+            $func = explode(',', $v['func']);
+            foreach ($func as $kk => $vv) {
+                switch ($vv) {
+                    case 'checkNotEmpty':
+                        $error = $this->checkNotEmpty($cols[$k]);
+                        break;
+                    case 'checkMobile':
+                        $error = $this->checkMobile($cols[$k]);
+                        break;
+                    case 'checkMoreThan':
+                        $error = $this->checkMoreThan($cols[$k], $v['args']);
+                        break;
+                    case 'checkKeyExists':
+                        $error = $this->checkKeyExists($cols[$k], $v['args']);
+                        break;
+                    case 'checkNumber':
+                        $error = $this->checkNumber($cols[$k], $v['args']);
+                        break;
+                    default:
+                        $error = true;
+                }
             }
 
             if (is_string($error)) {
