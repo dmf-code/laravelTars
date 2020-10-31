@@ -33,3 +33,27 @@ if ($cmd === 'stop') {
 
     include_once __DIR__ . '/artisan';
 }
+
+// 定制化设置配置文件，以适应跑定时任务
+function setEnv($cfg)
+{
+    $envPath = base_path() . DIRECTORY_SEPARATOR . '.env';
+    $lines = collect(file($envPath, FILE_IGNORE_NEW_LINES));
+    $lines->transform(function ($item) use ($cfg) {
+
+        foreach ($cfg as $k => $v) {
+            if (stripos($item, $k) !== false) {
+                return "{$k}={$v}";
+            }
+        }
+        return $item;
+    });
+
+    $content = implode( PHP_EOL, $lines->toArray());
+
+    file_put_contents($envPath, $content);
+}
+
+setEnv([
+    'TARS_DEPLOY_CONFIG' => $config_path
+]);

@@ -17,9 +17,12 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-Route::group(['prefix' => 'groupBuy'], function () {
-    Route::get('test', function () {
-        return config('tars.deploy_cfg');
-    });
+Route::get('test', function () {
+    $test = \App\Test::query()->get();
+    return [
+        $test,
+        'memory_get_usage' => memory_get_usage(),
+    ];
 });
+
 
