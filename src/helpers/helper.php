@@ -1,9 +1,12 @@
 <?php
 
 use App\Tars\utils\TarsHelper;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
-if (!function_exists("getUniqueId")) {
-    function getUniqueId()
+if (!function_exists("get_unique_id")) {
+    function get_unique_id()
     {
         $EPOCH = 1479533469598;
         $max12bit = 4095;
@@ -26,8 +29,8 @@ if (!function_exists("getUniqueId")) {
     }
 }
 
-if (!function_exists("helpResponse")) {
-    function helpResponse($code, $msg, $data = [])
+if (!function_exists("resp")) {
+    function resp($code, $msg, $data = [])
     {
         return [
             'code' => $code,
@@ -37,15 +40,13 @@ if (!function_exists("helpResponse")) {
     }
 }
 
-if (!function_exists("tarsRequest")) {
-    function tarsRequest($id, $path, $method='GET', $options=[])
+if (!function_exists("tars_request")) {
+    function tars_request($id, $path, $method='GET', $options=[])
     {
         $tarsRes = TarsHelper::getHttpIpAndPort($id);
 
-        \Log::info(json_encode($tarsRes, JSON_UNESCAPED_UNICODE));
-
         if ($tarsRes['code'] != 200) {
-            return helpResponse(400, $tarsRes['msg']);
+            return resp(400, $tarsRes['msg']);
         }
 
         $client = new \GuzzleHttp\Client();
@@ -57,17 +58,77 @@ if (!function_exists("tarsRequest")) {
 
         $res = json_decode($res->getBody()->getContents(), true);
 
-        if ($id != 'Integral.Integral.IntegralHttp' && $res['code'] != 200) {
-            \Log::error(json_encode($res, JSON_UNESCAPED_UNICODE));
-            return helpResponse(400, '查询失败');
-        }
+        return $res;
+    }
+}
 
-        if ($id == 'Integral.Integral.IntegralHttp' && $res['msg'] != 'success') {
-            \Log::error(json_encode($res, JSON_UNESCAPED_UNICODE));
-            return helpResponse(400, '查询失败');
-        }
+if (!function_exists('batch_update')) {
+    function batch_update(Model $table, array $values, string $index = null) {
+        try {
 
-        return helpResponse(200, 'ok', $res['data']);
+            if (!count($values)) {
+                return false;
+            }
+
+            if (isset($index) || empty($index)) {
+                $index = $table->getKeyName();
+            }
+
+            $tableName = DB::getTablePrefix() . $table->getTable();
+
+            $updateSql = "UPDATE {$tableName} SET ";
+
+            $ids = [];
+            $sets = [];
+            $bindings = [];
+
+            $updateColumn = array_keys(current($values));
+
+
+            foreach ($updateColumn as $uColumn) {
+                $setSql = "`{$uColumn}` = CASE ";
+                foreach ($values as $key => $value) {
+                    $id = $value[$index];
+                    $ids[] = $id;
+                    $setSql .= "WHEN `{$index}` = ? THEN ? ";
+                    $bindings[] = $id;
+                    $bindings[] = $value[$uColumn];
+                }
+
+                $setSql .= "ELSE `{$uColumn}` END ";
+                $sets[] = $setSql;
+            }
+
+            $updateSql .= implode(', ', $sets);
+            $updateSql = rtrim($updateSql, ', '). " WHERE `$index` IN(" . '"' . implode('","', $ids) . '"' . ");";
+
+            return DB::update($updateSql, $bindings);
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return false;
+        }
+    }
+}
+
+if (!function_exists('chuck_batch_update')) {
+    function chuck_batch_update(Model $table, array $values, string $index = null)
+    {
+        try {
+            $chucks = array_chunk($values, 200, true);
+
+            foreach ($chucks as $chuck) {
+                $res = batch_update($table, $chuck, $index);
+
+                if ($res === false) {
+                    \Log::error("数据更新失败");
+                }
+
+            }
+
+        } catch (\Exception $e) {
+            Log::error($e->getMessage());
+            return false;
+        }
     }
 }
 

@@ -94,6 +94,19 @@ trait ApiResponse
         return null;
     }
 
+    public function validatorJson(array $json, array $rules, array $message)
+    {
+        foreach ($json as $k => $v) {
+            $validator = Validator::make($json, $rules);
+
+            if ($validator->fails()) {
+                return $validator->errors()->first();
+            }
+        }
+
+        return false;
+    }
+
     public function equal($model, $key, $field=null)
     {
         if (!is_null($item = request()->input($key, null))) {

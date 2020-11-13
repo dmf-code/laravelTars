@@ -6,12 +6,13 @@
     "type": "project",
     "require": {
         "php": ">=7.0.0",
+        "ext-json": "*",
+        "barryvdh/laravel-ide-helper": "^2.8",
         "fideloper/proxy": "~3.3",
         "laravel/framework": "5.5.*",
         "laravel/tinker": "~1.0",
         "luoxiaojun1992/laravel-tars": "^0.1.7",
-        "maatwebsite/excel": "^3.1",
-        "ext-json": "*"
+        "maatwebsite/excel": "^3.1"
     },
     "require-dev": {
         "filp/whoops": "~2.0",
