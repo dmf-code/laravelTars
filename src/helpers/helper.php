@@ -41,7 +41,7 @@ if (!function_exists("resp")) {
 }
 
 if (!function_exists("tars_request")) {
-    function tars_request($id, $path, $method='GET', $options=[])
+    function tars_request($id, $path, $method='GET', $options=[], $ssl=false)
     {
         $tarsRes = TarsHelper::getHttpIpAndPort($id);
 
@@ -51,7 +51,12 @@ if (!function_exists("tars_request")) {
 
         $client = new \GuzzleHttp\Client();
 
-        $url = "http://{$tarsRes['data']['ip']}:{$tarsRes['data']['port']}";
+        $url = 'http';
+        if ($ssl) {
+            $url = 'https';
+        }
+
+        $url .= "://{$tarsRes['data']['ip']}:{$tarsRes['data']['port']}";
         $url .= $path;
 
         $res = $client->request($method, $url, $options);
