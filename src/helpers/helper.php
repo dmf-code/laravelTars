@@ -45,6 +45,11 @@ if (!function_exists("tars_request")) {
     {
         $tarsRes = TarsHelper::getHttpIpAndPort($id);
 
+        // 设置默认超时时间
+        if (!isset($options['timeout'])) {
+            $options['timeout'] = 30;
+        }
+
         if ($tarsRes['code'] != 200) {
             return resp(400, $tarsRes['msg']);
         }
