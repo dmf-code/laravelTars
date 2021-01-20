@@ -20,3 +20,15 @@
 
 2. 非类函数命名统一采用蛇形命名 （play_game）
 
+### 项目搭建
+
+`src/config/tars.php` 文件中要对上在 `tarsweb` 后台的部署名称 
+
+![协议](./static/proto.png)
+
+`tarsweb` 后台
+
+![tarsweb](./static/tarsweb_add_service.png)
+
+这里直接使用 `php artisan tars:deploy` 生成压缩包，然后上传就可以了
+

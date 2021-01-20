@@ -18,9 +18,9 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 });
 
 Route::get('test', function () {
-    $test = \App\Test::query()->get();
+//    $test = \App\Test::query()->get();
     return [
-        $test,
+//        $test,
         'memory_get_usage' => memory_get_usage(),
     ];
 });
