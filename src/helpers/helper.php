@@ -141,3 +141,11 @@ if (!function_exists('chuck_batch_update')) {
         }
     }
 }
+
+if (!function_exists('log_standard_error')) {
+    function log_standard_error(\Exception $e)
+    {
+        $str = sprintf("File: %s, Line %s, %s", $e->getFile(), $e->getLine(), $e->getMessage());
+        Log::error($str);
+    }
+}
